@@ -1,11 +1,14 @@
 package com.example.android.radiusassignment.data.remote;
 
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import com.example.android.radiusassignment.data.AppDataSource;
 
 import io.reactivex.Flowable;
 import retrofit2.Retrofit;
+
+import static com.google.common.base.Preconditions.checkNotNull;
 
 public class AppRemoteDataSource implements AppDataSource {
     @Nullable
@@ -32,5 +35,13 @@ public class AppRemoteDataSource implements AppDataSource {
     @Override
     public Flowable<BaseResponse> getData() {
         return mApiInterface.getData();
+    }
+
+    @Override
+    public void saveData(@Nullable Boolean isOnlyStoredLocally,
+                         @NonNull BaseResponse baseResponse) {
+        // TODO: save data remotely
+        checkNotNull(baseResponse);
+
     }
 }

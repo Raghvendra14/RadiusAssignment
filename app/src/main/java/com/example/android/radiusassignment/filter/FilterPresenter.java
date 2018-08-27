@@ -4,10 +4,13 @@ import android.support.annotation.NonNull;
 
 import com.example.android.radiusassignment.data.AppRepository;
 import com.example.android.radiusassignment.data.remote.BaseResponse;
+import com.example.android.radiusassignment.interfaces.Constants;
+import com.example.android.radiusassignment.utils.NoInternetException;
 import com.example.android.radiusassignment.utils.PrettyLogger;
 import com.example.android.radiusassignment.utils.TaskExecutor;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+
+import java.io.IOException;
+import java.net.SocketTimeoutException;
 
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
@@ -61,14 +64,39 @@ public class FilterPresenter implements FilterContract.Presenter {
         mCompositeDisposable.clear();
         Disposable disposable = mAppRepository
                 .getData()
-                .subscribeOn(Schedulers.from(TaskExecutor.threadPoolExecutor))
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(baseResponse -> {
-                    PrettyLogger.json(new Gson().toJson(baseResponse, new TypeToken<BaseResponse>(){}.getType()));
+                    processFilters(baseResponse);
+                    mFilterView.setLoadingIndicator(false);
                 }, throwable -> {
-                    // TODO: handle db and remote errors here
-                    PrettyLogger.d(throwable.getMessage());
+                    mFilterView.setLoadingIndicator(false);
+                    handleThrowable(throwable);
                 });
         mCompositeDisposable.add(disposable);
+    }
+
+    private void processFilters(BaseResponse baseResponse) {
+        if (baseResponse == null || baseResponse.getFacilityList() == null ||
+                baseResponse.getExclusionList() == null ||
+                baseResponse.getFacilityList().isEmpty()) {
+            // no facilities found, show empty view screen
+            mFilterView.showEmptyView();
+        } else {
+            // show the list of facilities
+            mFilterView.showFacilities(baseResponse);
+        }
+    }
+
+    private void handleThrowable(@NonNull Throwable throwable) {
+        checkNotNull(throwable);
+        if (throwable instanceof NoInternetException) {
+            mFilterView.showApiErrors(Constants.NO_INTERNET_ERROR);
+        } else if (throwable instanceof SocketTimeoutException) {
+            mFilterView.showApiErrors(Constants.SOCKET_TIMEOUT_ERROR);
+        } else if (throwable instanceof IOException){
+            mFilterView.showApiErrors(Constants.IO_ERROR);
+        } else {
+            mFilterView.showApiErrors(Constants.OTHER_ERROR);
+        }
     }
 }

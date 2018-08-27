@@ -6,4 +6,6 @@ import io.reactivex.Flowable;
 
 public interface AppDataSource {
     Flowable<BaseResponse> getData();
+
+    void saveData(Boolean isOnlyStoredLocally, BaseResponse baseResponse);
 }

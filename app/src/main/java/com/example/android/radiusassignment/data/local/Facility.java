@@ -21,6 +21,10 @@ public class Facility extends RealmObject {
     @Expose
     private RealmList<Option> options = new RealmList<>();
 
+    public Facility() {
+
+    }
+
     public String getFacilityId() {
         return facilityId;
     }

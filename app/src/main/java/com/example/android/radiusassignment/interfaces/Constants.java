@@ -11,4 +11,10 @@ public interface Constants {
 
     // Preferences Related Constants/Keys
     String INTERNET_CONNECTIVITY_KEY = "INTERNET_CONNECTIVITY_KEY";
+
+    // Error Related Constants
+    int NO_INTERNET_ERROR = 0;
+    int IO_ERROR = 1;
+    int SOCKET_TIMEOUT_ERROR = 2;
+    int OTHER_ERROR = 3;
 }
