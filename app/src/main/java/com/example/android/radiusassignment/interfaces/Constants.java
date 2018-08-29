@@ -17,4 +17,10 @@ public interface Constants {
     int IO_ERROR = 1;
     int SOCKET_TIMEOUT_ERROR = 2;
     int OTHER_ERROR = 3;
+
+    // Sync Job Service Related Constant
+    int PLAY_SERVICES_CHECK = 5000;
+    String SYNC_TAG = "sync-job-service";
+    int WINDOW_START = 86400;
+    int WINDOW_END = 87300;
 }

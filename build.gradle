@@ -51,4 +51,6 @@ ext {
     rxjavaVersion = '2.2.1'
     butterknifeVersion = '8.8.1'
     loggerVersion = '2.2.0'
+    firebaseJobDispatcherVersion = '0.8.5'
+    googleAuthVersion = '16.0.0'
 }

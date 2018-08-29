@@ -73,4 +73,10 @@ dependencies {
 
     // Logger Dependency
     implementation "com.orhanobut:logger:$rootProject.ext.loggerVersion"
+
+    // Firebase Job Dispatcher Dependency
+    implementation "com.firebase:firebase-jobdispatcher:$rootProject.ext.firebaseJobDispatcherVersion"
+
+    // Google Play Identity
+    implementation "com.google.android.gms:play-services-auth:$rootProject.ext.googleAuthVersion"
 }

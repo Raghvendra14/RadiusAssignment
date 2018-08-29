@@ -16,10 +16,6 @@ public class FilterActivity extends AppCompatActivity {
         setContentView(R.layout.activity_filter);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setDisplayShowHomeEnabled(true);
-        }
 
         FilterActivityFragment filterActivityFragment =
                 (FilterActivityFragment) getSupportFragmentManager().findFragmentById(R.id.content_fragment);

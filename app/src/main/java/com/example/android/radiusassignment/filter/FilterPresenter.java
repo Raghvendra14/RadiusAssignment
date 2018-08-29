@@ -6,8 +6,6 @@ import com.example.android.radiusassignment.data.AppRepository;
 import com.example.android.radiusassignment.data.remote.BaseResponse;
 import com.example.android.radiusassignment.interfaces.Constants;
 import com.example.android.radiusassignment.utils.NoInternetException;
-import com.example.android.radiusassignment.utils.PrettyLogger;
-import com.example.android.radiusassignment.utils.TaskExecutor;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -15,7 +13,6 @@ import java.net.SocketTimeoutException;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -42,11 +39,17 @@ public class FilterPresenter implements FilterContract.Presenter {
         mFilterView.setPresenter(this);
     }
 
+    /**
+     *  Method called to subscribe to presenter
+     */
     @Override
     public void subscribe() {
         loadData(true);
     }
 
+    /**
+     *  Method called to unsubscribe to presenter
+     */
     @Override
     public void unsubscribe() {
         mCompositeDisposable.clear();
@@ -61,6 +64,7 @@ public class FilterPresenter implements FilterContract.Presenter {
             mFilterView.setLoadingIndicator(true);
         }
 
+        // clear all previous disposables
         mCompositeDisposable.clear();
         Disposable disposable = mAppRepository
                 .getData()
@@ -72,9 +76,14 @@ public class FilterPresenter implements FilterContract.Presenter {
                     mFilterView.setLoadingIndicator(false);
                     handleThrowable(throwable);
                 });
+        // add the current disposable
         mCompositeDisposable.add(disposable);
     }
 
+    /**
+     *  This is to process base response {@link BaseResponse} as per its values
+     *  @param baseResponse baseResponse Object
+     */
     private void processFilters(BaseResponse baseResponse) {
         if (baseResponse == null || baseResponse.getFacilityList() == null ||
                 baseResponse.getExclusionList() == null ||
@@ -87,8 +96,13 @@ public class FilterPresenter implements FilterContract.Presenter {
         }
     }
 
+    /**
+     *  It is handle throwable based on its instance
+     *  @param throwable Throwable that is used to show error in UI.
+     */
     private void handleThrowable(@NonNull Throwable throwable) {
         checkNotNull(throwable);
+        // check its instance
         if (throwable instanceof NoInternetException) {
             mFilterView.showApiErrors(Constants.NO_INTERNET_ERROR);
         } else if (throwable instanceof SocketTimeoutException) {

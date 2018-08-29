@@ -32,6 +32,12 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.example.android.radiusassignment.SplashActivity" />
         </activity>
+        <service android:name=".service.SyncJobService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
