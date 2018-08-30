@@ -4,7 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:padding="@dimen/d4">
+    android:layout_marginBottom="@dimen/d8"
+    android:layout_marginEnd="@dimen/d8"
+    android:layout_marginRight="@dimen/d8"
+    android:layout_marginTop="@dimen/d8">
 
     <com.example.android.radiusassignment.views.CustomButton
         android:id="@+id/chip"

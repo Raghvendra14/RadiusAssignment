@@ -4,7 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="@dimen/d4">
+    android:paddingTop="@dimen/d4"
+    android:paddingBottom="@dimen/d4">
 
     <TextView
         android:id="@+id/facility_name"
@@ -23,7 +24,7 @@
         android:id="@+id/option_recycler_view"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="@dimen/d4"
+        android:layout_marginTop="@dimen/d8"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
