@@ -32,15 +32,26 @@ public class AppRemoteDataSource implements AppDataSource {
         mApiInterface = retrofit.create(ApiInterface.class);
     }
 
+    /**
+     * Method to get data from remote source using Retrofit2 Client.
+     *
+     * @return Flowable of type BaseResponse
+     */
     @Override
     public Flowable<BaseResponse> getData() {
         return mApiInterface.getData();
     }
 
+    /**
+     * Method to store data in remote data source, i.e., backend.
+     *
+     * @param isOnlyStoredLocally Boolean value to decide where to store the data.
+     * @param baseResponse        BaseResponse object that needs to be stored
+     */
     @Override
     public void saveData(@Nullable Boolean isOnlyStoredLocally,
                          @NonNull BaseResponse baseResponse) {
-        // TODO: save data remotely
+        // to store data in the backend
         checkNotNull(baseResponse);
 
     }

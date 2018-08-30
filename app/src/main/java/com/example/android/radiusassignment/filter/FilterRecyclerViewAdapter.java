@@ -11,7 +11,6 @@ import android.widget.TextView;
 
 import com.example.android.radiusassignment.R;
 import com.example.android.radiusassignment.data.local.Facility;
-import com.example.android.radiusassignment.data.local.Option;
 import com.example.android.radiusassignment.interfaces.RecyclerClickListenerInterface;
 import com.google.android.flexbox.FlexDirection;
 import com.google.android.flexbox.FlexWrap;
@@ -62,6 +61,11 @@ public class FilterRecyclerViewAdapter extends RecyclerView.Adapter<FilterRecycl
         return (mFacilityList != null) ? mFacilityList.size() : 0;
     }
 
+    /**
+     * Method to update the list
+     *
+     * @param updatedList List that needs to be added.
+     */
     public void updateList(List<Facility> updatedList) {
         if (mFacilityList == null) {
             mFacilityList = new ArrayList<>();
@@ -72,6 +76,12 @@ public class FilterRecyclerViewAdapter extends RecyclerView.Adapter<FilterRecycl
         notifyDataSetChanged();
     }
 
+    /**
+     * Method to setup Recyler View
+     *
+     * @param optionRecyclerView RecyclerView for options
+     * @param currentFacility    Current facility {@link Facility} object
+     */
     private void setupOptionsRecyclerView(@NonNull RecyclerView optionRecyclerView, @NonNull Facility currentFacility) {
         FlexboxLayoutManager flexboxLayoutManager = new FlexboxLayoutManager(mContext,
                 FlexDirection.ROW, FlexWrap.WRAP);

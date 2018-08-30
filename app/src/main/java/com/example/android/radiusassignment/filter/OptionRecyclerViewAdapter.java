@@ -48,6 +48,7 @@ public class OptionRecyclerViewAdapter extends RecyclerView.Adapter<OptionRecycl
                 currentOption.getIcon() != null && !TextUtils.isEmpty(currentOption.getIcon())) {
             // TODO: bind the item boiiiiiiiiii
             viewHolder.mChip.setText(currentOption.getName());
+            // set chip selection based on current option's isSelected field
             viewHolder.mChip.setSelected(currentOption.isSelected());
             // check whether chip is enabled or not
             if (currentOption.isEnabled()) {
@@ -58,11 +59,14 @@ public class OptionRecyclerViewAdapter extends RecyclerView.Adapter<OptionRecycl
                 viewHolder.mChip.setEnabled(false);
             }
             viewHolder.mChip.setOnClickListener(view -> {
-                // call the click listener here
+                // call the onItemClickListener method to invoke its implementation in its respective activity/fragment
                 mClickListenerInterface.onItemClickListener(currentOption.isSelected(), mFacilityId, currentOption.getId());
             });
         } else {
+            //reset values
             viewHolder.mChip.setText("");
+            viewHolder.mChip.setAlpha(1.0f);
+            viewHolder.mChip.setEnabled(true);
             viewHolder.itemView.setVisibility(View.GONE);
         }
     }
@@ -72,6 +76,11 @@ public class OptionRecyclerViewAdapter extends RecyclerView.Adapter<OptionRecycl
         return (mOptionList != null) ? mOptionList.size() : 0;
     }
 
+    /**
+     * Method to update the list
+     *
+     * @param updatedList List that needs to be added.
+     */
     public void updateList(List<Option> updatedList) {
         if (mOptionList == null) {
             mOptionList = new ArrayList<>();

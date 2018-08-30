@@ -34,9 +34,14 @@ public class AppLocalDataSource implements AppDataSource {
     private AppLocalDataSource() {
     }
 
+    /**
+     * Method to get data from local source using Realm instance.
+     *
+     * @return Flowable of type BaseResponse
+     */
     @Override
     public Flowable<BaseResponse> getData() {
-        // TODO: get Data from Realm database (requires changes)
+        // TODO: get Data from Realm database (require changes)
         Realm parentRealm = Realm.getDefaultInstance();
         Flowable<RealmResults<Facility>> facilitiesFlowable = parentRealm .where(Facility.class)
                 .findAllAsync().asFlowable().filter(RealmResults::isLoaded);
@@ -59,10 +64,16 @@ public class AppLocalDataSource implements AppDataSource {
         });
     }
 
+    /**
+     * Method to store data in local data source, i.e., Realm.IO.
+     *
+     * @param isOnlyStoredLocally Boolean value to decide where to store the data.
+     * @param baseResponse        BaseResponse object that needs to be stored
+     */
     @Override
     public void saveData(@Nullable Boolean isOnlyStoredLocally,
                          @NonNull BaseResponse baseResponse) {
-        // TODO: save data locally (requires changes)
+        // TODO: save data locally (require changes)
         checkNotNull(baseResponse);
         Realm realmObject = Realm.getDefaultInstance();
         realmObject.executeTransactionAsync(realm -> {

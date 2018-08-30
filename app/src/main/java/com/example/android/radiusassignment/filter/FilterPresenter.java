@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -25,6 +26,7 @@ import io.reactivex.Flowable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.BiConsumer;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
@@ -96,15 +98,26 @@ public class FilterPresenter implements FilterContract.Presenter {
     }
 
 
+    /**
+     * Getter for BaseResponse object
+     */
     @Nullable
     @Override
     public BaseResponse getBaseResponse() {
         return mBaseResponse;
     }
 
+    /**
+     * Method called to perform click action on the BaseResponse Instance and then notify the view.
+     *
+     * @param isSelected To show whether the item was already selected or not
+     * @param facilityId Facility id associated with the clicked item
+     * @param optionId   Option id associated with the clicked item
+     */
     @Override
     public void itemClicked(boolean isSelected, @NonNull String facilityId, @NonNull String optionId) {
         if (mBaseResponse != null) {
+            // select or unselect the chips
             Flowable<Boolean> selectChipFlowable = Flowable.fromIterable(mBaseResponse.getFacilityList())
                     .filter(facility -> facility != null && facility.getFacilityId() != null &&
                             facility.getFacilityId().equals(facilityId) && facility.getOptions() != null &&
@@ -129,24 +142,36 @@ public class FilterPresenter implements FilterContract.Presenter {
                                 .last(new ArrayList<>())
                                 .toFlowable()
                                 .flatMap(Flowable::fromIterable)
-                                // call a flat map to enable previously disabled chips based on optionList
+                                // enable the previously excluded chips
                                 .flatMap(option -> updateChipsByExclusionList(mBaseResponse.getExclusionList(), facilityId,
                                         option.getId(), false));
                     });
 
-            // update the exclusion list based on boolean in parameters
+            // disable the excluded chips
             Flowable<Boolean> disableChipFlowable = (!isSelected) ? updateChipsByExclusionList(mBaseResponse.getExclusionList(),
                     facilityId, optionId, true) : Flowable.just(Boolean.TRUE);
 
+            // Concat the observables and call showFacilities onComplete
             Disposable itemClickFlowable = Flowable.fromIterable(Lists.newArrayList(selectChipFlowable, disableChipFlowable))
                     .concatMap(booleanFlowable -> booleanFlowable)
                     .doOnComplete(mFilterView::showFacilities)
                     .subscribe();
 
+            // add the disposable.
             mCompositeDisposable.add(itemClickFlowable);
         }
     }
 
+    /**
+     * It is used to update (enable or disable) chips based on previously or currently selected chips and exclusionList in BaseResponse object.
+     * Gets the exclusion list for the facility id and option id present in parameters
+     *
+     * @param exclusionList list use to update the chips
+     * @param facilityId    Facility id of an item
+     * @param optionId      Option id of an item
+     * @param isDisabling   It is used to decide whether to enable the chips or disable them
+     * @return Flowable of type Boolean
+     */
     private Flowable<Boolean> updateChipsByExclusionList(@NonNull List<List<Exclusion>> exclusionList, @NonNull String facilityId,
                                                          @NonNull String optionId, boolean isDisabling) {
         Flowable<List<Exclusion>> excludedItemListFlowable = getExclusionList(exclusionList, facilityId, optionId, null, null);
@@ -156,7 +181,18 @@ public class FilterPresenter implements FilterContract.Presenter {
         return excludedItemListFlowable.flatMap(exclusions -> toggleChipsFlowable(exclusions, isDisabling));
     }
 
-    private Flowable<List<Exclusion>> checkForExistingSelectedChips(@NonNull List<Exclusion> exclusionList, @NonNull String facilityId,
+    /**
+     * Performs check for finding out whether there are other selected chips that hold same exclusion item as of the
+     * current one.
+     *
+     * @param exclusionList List of Exclusion for the clicked item
+     * @param facilityId    Facility id of an item
+     * @param optionId      Option id of an item
+     * @return Flowable of type List<Exclusion> where Exclusion is a model
+     * @see Exclusion
+     */
+    private Flowable<List<Exclusion>> checkForExistingSelectedChips(@NonNull List<Exclusion> exclusionList,
+                                                                    @NonNull String facilityId,
                                                                     @NonNull String optionId) {
         List<Exclusion> newExclusionList = new ArrayList<>(exclusionList);
         if (mBaseResponse != null) {
@@ -188,6 +224,17 @@ public class FilterPresenter implements FilterContract.Presenter {
         }
     }
 
+    /**
+     * Computes an exclusion list Flowable {@link Flowable} from the list given in parameters based on the facility id,
+     * option id. Uses collect operator of Flowable {@link Flowable#collect(Callable, BiConsumer)}
+     *
+     * @param exclusionList   List to find out the exclusion list
+     * @param facilityId      Facility id of an item
+     * @param optionId        Option id of an item
+     * @param avoidFacilityId Facility id of an item that should not be in the flowable
+     * @param avoidOptionId   Option id of an item that should not be in the flowable
+     * @return Flowable of type List<Exclusion>
+     */
     private Flowable<List<Exclusion>> getExclusionList(@NonNull List<List<Exclusion>> exclusionList,
                                                        @NonNull String facilityId, @NonNull String optionId,
                                                        @Nullable String avoidFacilityId, @Nullable String avoidOptionId) {
@@ -239,6 +286,13 @@ public class FilterPresenter implements FilterContract.Presenter {
         return flowable;
     }
 
+    /**
+     * Method to toogle the chips.
+     *
+     * @param exclusionList list of items that needs to be toggled
+     * @param isDisabling   boolean value to decide whether to disable or enable them
+     * @return Flowable of type Boolean
+     */
     private Flowable<Boolean> toggleChipsFlowable(List<Exclusion> exclusionList, boolean isDisabling) {
         if (mBaseResponse != null && exclusionList != null) {
             return Flowable.fromIterable(mBaseResponse.getFacilityList())
@@ -263,6 +317,12 @@ public class FilterPresenter implements FilterContract.Presenter {
         return Flowable.just(Boolean.FALSE);
     }
 
+    /**
+     * Create a Flowable object of Exclusion type from a list of exclusions and filter its values.
+     *
+     * @param exclusions List that needs to be converted into Flowable<Exclusion>
+     * @return Flowable of type Exclusion
+     */
     private Flowable<Exclusion> getFilteredExclusionFlowable(@NonNull List<Exclusion> exclusions) {
         return Flowable.fromIterable(exclusions)
                 .filter(exclusion -> exclusion != null && exclusion.getFacilityId() != null &&
