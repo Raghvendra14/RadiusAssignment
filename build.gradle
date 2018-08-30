@@ -53,4 +53,6 @@ ext {
     loggerVersion = '2.2.0'
     firebaseJobDispatcherVersion = '0.8.5'
     googleAuthVersion = '16.0.0'
+    multiDexVersion = '1.0.3'
+    flexBoxVersion = '1.0.0'
 }

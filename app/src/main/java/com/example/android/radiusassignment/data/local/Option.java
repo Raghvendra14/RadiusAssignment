@@ -4,6 +4,7 @@ import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 import io.realm.RealmObject;
+import io.realm.annotations.Ignore;
 import io.realm.annotations.PrimaryKey;
 
 public class Option extends RealmObject {
@@ -19,6 +20,12 @@ public class Option extends RealmObject {
     @SerializedName("id")
     @Expose
     private String id;
+
+    @Ignore
+    private boolean isSelected;
+
+    @Ignore
+    private boolean isEnabled = true;
 
     public Option() {
 
@@ -46,5 +53,21 @@ public class Option extends RealmObject {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public boolean isSelected() {
+        return isSelected;
+    }
+
+    public void setSelected(boolean selected) {
+        isSelected = selected;
+    }
+
+    public boolean isEnabled() {
+        return isEnabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        isEnabled = enabled;
     }
 }

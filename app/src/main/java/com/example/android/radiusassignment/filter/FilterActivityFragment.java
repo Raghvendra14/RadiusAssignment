@@ -7,17 +7,20 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 
 import com.example.android.radiusassignment.R;
 import com.example.android.radiusassignment.data.remote.BaseResponse;
 import com.example.android.radiusassignment.interfaces.Constants;
-import com.google.gson.Gson;
+import com.example.android.radiusassignment.interfaces.RecyclerClickListenerInterface;
+
+import java.util.ArrayList;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -27,18 +30,22 @@ import static com.google.common.base.Preconditions.checkNotNull;
 /**
  * Fragment to hold filter screen.
  */
-public class FilterActivityFragment extends Fragment implements FilterContract.View {
+public class FilterActivityFragment extends Fragment implements FilterContract.View,
+        RecyclerClickListenerInterface {
     private FilterContract.Presenter mPresenter;
 
     private Snackbar mSnackbar;
 
-    @BindView(R.id.json_view)
-    TextView mJSONView;
-
     @BindView(R.id.progress_dialog)
     ProgressBar mProgressDialog;
 
+    @BindView(R.id.facilities_recycler_view)
+    RecyclerView mFacilitiesRecyclerView;
+
     private int mShortAnimationDuration;
+
+    private View mRootView;
+    private FilterRecyclerViewAdapter mFacilityRecyclerViewAdapter;
 
     public FilterActivityFragment() {
         // Requires empty public constructor
@@ -56,14 +63,16 @@ public class FilterActivityFragment extends Fragment implements FilterContract.V
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.fragment_filter, container, false);
-        ButterKnife.bind(this, rootView);
+        mRootView = inflater.inflate(R.layout.fragment_filter, container, false);
+        ButterKnife.bind(this, mRootView);
 
-        // Retrieve and cache the system's default "short" animation time.
-        mShortAnimationDuration = getResources().getInteger(
-                android.R.integer.config_shortAnimTime);
+        // setup short animation duration once
+        setupShortAnimationDuration();
 
-        return rootView;
+        // setup Facilities Recycler View components
+        setupRecyclerView();
+
+        return mRootView;
     }
 
     @Override
@@ -116,7 +125,7 @@ public class FilterActivityFragment extends Fragment implements FilterContract.V
         }
 
         if (errorMessage == null || TextUtils.isEmpty(errorMessage) ||
-                getView() == null) {
+                mRootView == null) {
             return;
         }
 
@@ -124,7 +133,7 @@ public class FilterActivityFragment extends Fragment implements FilterContract.V
             mSnackbar.dismiss();
         }
 
-        mSnackbar = Snackbar.make(getView(), errorMessage, Snackbar.LENGTH_LONG).setAction(R.string.try_again, view -> {
+        mSnackbar = Snackbar.make(mRootView, errorMessage, Snackbar.LENGTH_LONG).setAction(R.string.try_again, view -> {
             mPresenter.loadData(true);
         });
         mSnackbar.show();
@@ -137,30 +146,56 @@ public class FilterActivityFragment extends Fragment implements FilterContract.V
     }
 
     @Override
-    public void showFacilities(@NonNull final BaseResponse baseResponse) {
+    public void showFacilities() {
         // TODO: show the data in Fields
+        BaseResponse baseResponse = mPresenter.getBaseResponse();
         checkNotNull(baseResponse);
-        mJSONView.setText(new Gson().toJson(baseResponse));
+        if (mFacilityRecyclerViewAdapter != null) {
+            mFacilityRecyclerViewAdapter.updateList(baseResponse.getFacilityList());
+        }
+    }
+
+    @Override
+    public void onItemClickListener(boolean isSelected, @NonNull String facilityId, @NonNull String optionId) {
+        checkNotNull(facilityId);
+        checkNotNull(optionId);
+        mPresenter.itemClicked(isSelected, facilityId, optionId);
+    }
+
+    private void setupRecyclerView() {
+        mFacilitiesRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity(),
+                LinearLayoutManager.VERTICAL, false));
+        if (getActivity() != null) {
+            mFacilityRecyclerViewAdapter = new FilterRecyclerViewAdapter(getActivity(), new ArrayList<>(),
+                    this);
+            mFacilitiesRecyclerView.setAdapter(mFacilityRecyclerViewAdapter);
+        }
+    }
+
+    private void setupShortAnimationDuration() {
+        // Retrieve and cache the system's default "short" animation time.
+        mShortAnimationDuration = getResources().getInteger(
+                android.R.integer.config_shortAnimTime);
     }
 
     private void setupCrossfade() {
         // Initially hide the content view.
-        mJSONView.setVisibility(View.GONE);
+        mFacilitiesRecyclerView.setVisibility(View.GONE);
         mProgressDialog.setVisibility(View.VISIBLE);
         // reset opacity
-        mJSONView.setAlpha(1f);
+        mFacilitiesRecyclerView.setAlpha(1f);
         mProgressDialog.setAlpha(1f);
     }
 
     private void performCrossfade() {
         // Set the content view to 0% opacity but visible, so that it is visible
         // (but fully transparent) during the animation.
-        mJSONView.setAlpha(0f);
-        mJSONView.setVisibility(View.VISIBLE);
+        mFacilitiesRecyclerView.setAlpha(0f);
+        mFacilitiesRecyclerView.setVisibility(View.VISIBLE);
 
         // Animate the content view to 100% opacity, and clear any animation
         // listener set on the view.
-        mJSONView.animate()
+        mFacilitiesRecyclerView.animate()
                 .alpha(1f)
                 .setDuration(mShortAnimationDuration)
                 .setListener(null);

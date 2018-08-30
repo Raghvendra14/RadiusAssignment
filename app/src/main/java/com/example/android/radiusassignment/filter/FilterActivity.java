@@ -14,8 +14,6 @@ public class FilterActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filter);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
 
         FilterActivityFragment filterActivityFragment =
                 (FilterActivityFragment) getSupportFragmentManager().findFragmentById(R.id.content_fragment);
@@ -26,6 +24,7 @@ public class FilterActivity extends AppCompatActivity {
                     R.id.content_fragment);
         }
 
+        // create an instance of presenter
         new FilterPresenter(Injection.provideAppRepository(), filterActivityFragment);
     }
 

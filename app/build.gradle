@@ -11,6 +11,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        multiDexEnabled true
 
         def baseUrlValue = project.findProperty("API_BASE_URL")
         buildConfigField("String",
@@ -77,6 +78,12 @@ dependencies {
     // Firebase Job Dispatcher Dependency
     implementation "com.firebase:firebase-jobdispatcher:$rootProject.ext.firebaseJobDispatcherVersion"
 
-    // Google Play Identity
+    // Google Play Auth Dependency
     implementation "com.google.android.gms:play-services-auth:$rootProject.ext.googleAuthVersion"
+
+    // MultiDex Dependency
+    implementation "com.android.support:multidex:$rootProject.ext.multiDexVersion"
+
+    // Google Flexbox Dependency
+    implementation "com.google.android:flexbox:$rootProject.ext.flexBoxVersion"
 }

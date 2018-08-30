@@ -1,7 +1,9 @@
 package com.example.android.radiusassignment;
 
 import android.app.Application;
+import android.content.Context;
 import android.content.ContextWrapper;
+import android.support.multidex.MultiDex;
 
 import com.example.android.radiusassignment.data.remote.AppRemoteDataSource;
 import com.example.android.radiusassignment.interfaces.Constants;
@@ -38,5 +40,11 @@ public class RadiusAssignment extends Application {
 
         // Internet Connectivity initiation
         InternetConnectivity.init(this);
+    }
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        MultiDex.install(this);
     }
 }
