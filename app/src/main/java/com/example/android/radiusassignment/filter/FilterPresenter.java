@@ -87,10 +87,11 @@ public class FilterPresenter implements FilterContract.Presenter {
                 .getData()
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(baseResponse -> {
-                    processFilters(baseResponse);
                     mFilterView.setLoadingIndicator(false);
+                    processFilters(baseResponse);
                 }, throwable -> {
                     mFilterView.setLoadingIndicator(false);
+                    mFilterView.showEmptyView();
                     handleThrowable(throwable);
                 });
         // add the current disposable

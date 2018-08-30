@@ -10,4 +10,5 @@
     <!--Sp dimens-->
     <dimen name="s16">16sp</dimen>
     <dimen name="s18">18sp</dimen>
+    <dimen name="s20">20sp</dimen>
 </resources>

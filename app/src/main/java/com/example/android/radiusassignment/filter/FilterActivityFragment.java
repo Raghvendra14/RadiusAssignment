@@ -5,6 +5,7 @@ import android.animation.AnimatorListenerAdapter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
@@ -41,6 +42,9 @@ public class FilterActivityFragment extends Fragment implements FilterContract.V
 
     @BindView(R.id.facilities_recycler_view)
     RecyclerView mFacilitiesRecyclerView;
+
+    @BindView(R.id.empty_view)
+    ConstraintLayout mEmptyView;
 
     private int mShortAnimationDuration;
 
@@ -94,7 +98,6 @@ public class FilterActivityFragment extends Fragment implements FilterContract.V
 
     @Override
     public void setLoadingIndicator(final boolean active) {
-        // TODO: create a loading layout
         if (active) {
             // show Loading UI
             setupCrossfade();
@@ -143,11 +146,15 @@ public class FilterActivityFragment extends Fragment implements FilterContract.V
     @Override
     public void showEmptyView() {
         // TODO: create an empty view in layout
+        mEmptyView.setVisibility(View.VISIBLE);
+        mFacilitiesRecyclerView.setVisibility(View.GONE);
     }
 
     @Override
     public void showFacilities() {
         // TODO: show the data in Fields
+        mEmptyView.setVisibility(View.GONE);
+        mFacilitiesRecyclerView.setVisibility(View.VISIBLE);
         BaseResponse baseResponse = mPresenter.getBaseResponse();
         checkNotNull(baseResponse);
         if (mFacilityRecyclerViewAdapter != null) {
@@ -180,9 +187,11 @@ public class FilterActivityFragment extends Fragment implements FilterContract.V
 
     private void setupCrossfade() {
         // Initially hide the content view.
+        mEmptyView.setVisibility(View.GONE);
         mFacilitiesRecyclerView.setVisibility(View.GONE);
         mProgressDialog.setVisibility(View.VISIBLE);
         // reset opacity
+        mEmptyView.setAlpha(1f);
         mFacilitiesRecyclerView.setAlpha(1f);
         mProgressDialog.setAlpha(1f);
     }
@@ -190,11 +199,17 @@ public class FilterActivityFragment extends Fragment implements FilterContract.V
     private void performCrossfade() {
         // Set the content view to 0% opacity but visible, so that it is visible
         // (but fully transparent) during the animation.
+        mEmptyView.setAlpha(0f);
+        mEmptyView.setVisibility(View.VISIBLE);
         mFacilitiesRecyclerView.setAlpha(0f);
         mFacilitiesRecyclerView.setVisibility(View.VISIBLE);
 
         // Animate the content view to 100% opacity, and clear any animation
         // listener set on the view.
+        mEmptyView.animate()
+                .alpha(1f)
+                .setDuration(mShortAnimationDuration)
+                .setListener(null);
         mFacilitiesRecyclerView.animate()
                 .alpha(1f)
                 .setDuration(mShortAnimationDuration)
