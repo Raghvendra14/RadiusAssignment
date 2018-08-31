@@ -13,6 +13,14 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="AppThemeDark.Splash" parent="@style/AppTheme.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <!-- It is better to have splash image in different bucket sizes (e.g. mdpi, hdpi, etc.)-->
+        <item name="android:windowBackground">@drawable/splash_image</item>
+    </style>
+
     <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
@@ -20,4 +28,5 @@
     <style name="AppTheme.CustomProgressBarTheme">
         <item name="colorAccent">@color/colorPrimary</item>
     </style>
+
 </resources>
