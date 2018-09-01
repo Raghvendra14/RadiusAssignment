@@ -41,7 +41,9 @@ public class AppLocalDataSource implements AppDataSource {
      */
     @Override
     public Flowable<BaseResponse> getData() {
+        // get Realm instance
         Realm parentRealm = Realm.getDefaultInstance();
+        // create observables of facilities and exclusionList
         Flowable<RealmResults<Facility>> facilitiesFlowable = parentRealm.where(Facility.class)
                 .findAllAsync().asFlowable().filter(RealmResults::isLoaded);
         Flowable<RealmResults<ExclusionList>> exclusionListFlowable = parentRealm.where(ExclusionList.class)

@@ -46,10 +46,12 @@ public class FilterRecyclerViewAdapter extends RecyclerView.Adapter<FilterRecycl
         Facility currentFacility = mFacilityList.get(itemPosition);
         if (currentFacility != null && currentFacility.getName() != null && !TextUtils.isEmpty(currentFacility.getName()) &&
                 currentFacility.getOptions() != null && !currentFacility.getOptions().isEmpty()) {
+            // set the name of the facility
             viewHolder.mFacilityName.setText(currentFacility.getName());
             // setup recycler view for chips
             setupOptionsRecyclerView(viewHolder.mOptionRecyclerView, currentFacility);
         } else {
+            // reset the item
             viewHolder.mFacilityName.setText("");
             viewHolder.itemView.setVisibility(View.GONE);
         }
@@ -76,7 +78,7 @@ public class FilterRecyclerViewAdapter extends RecyclerView.Adapter<FilterRecycl
     }
 
     /**
-     * Method to setup Recyler View
+     * Method to setup Recycler View
      *
      * @param optionRecyclerView RecyclerView for options
      * @param currentFacility    Current facility {@link Facility} object

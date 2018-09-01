@@ -9,9 +9,6 @@ public interface Constants {
     String APPLICATION_JSON = "application/json";
     String HEADER_CONTENT_TYPE = "Content-Type";
 
-    // Preferences Related Constants/Keys
-    String INTERNET_CONNECTIVITY_KEY = "INTERNET_CONNECTIVITY_KEY";
-
     // Error Related Constants
     int NO_INTERNET_ERROR = 0;
     int IO_ERROR = 1;
