@@ -41,17 +41,17 @@ public class AppLocalDataSource implements AppDataSource {
      */
     @Override
     public Flowable<BaseResponse> getData() {
-        // TODO: get Data from Realm database (require changes)
         Realm parentRealm = Realm.getDefaultInstance();
-        Flowable<RealmResults<Facility>> facilitiesFlowable = parentRealm .where(Facility.class)
+        Flowable<RealmResults<Facility>> facilitiesFlowable = parentRealm.where(Facility.class)
                 .findAllAsync().asFlowable().filter(RealmResults::isLoaded);
-        Flowable<RealmResults<ExclusionList>> exclusionListFlowable = parentRealm .where(ExclusionList.class)
+        Flowable<RealmResults<ExclusionList>> exclusionListFlowable = parentRealm.where(ExclusionList.class)
                 .findAllAsync().asFlowable().filter(RealmResults::isLoaded);
         return Flowable.zip(facilitiesFlowable, exclusionListFlowable, (facilities, exclusionLists) -> {
             List<Facility> facilityList = parentRealm.copyFromRealm(facilities);
             List<ExclusionList> exclusionList = parentRealm.copyFromRealm(exclusionLists);
-
-            parentRealm .close();
+            // close the Realm instance
+            parentRealm.close();
+            // create a new exclusion list
             List<List<Exclusion>> exclusionListList = new ArrayList<>();
             Flowable.just(exclusionList)
                     .flatMap(Flowable::fromIterable)
@@ -73,54 +73,29 @@ public class AppLocalDataSource implements AppDataSource {
     @Override
     public void saveData(@Nullable Boolean isOnlyStoredLocally,
                          @NonNull BaseResponse baseResponse) {
-        // TODO: save data locally (require changes)
         checkNotNull(baseResponse);
-        Realm realmObject = Realm.getDefaultInstance();
-        realmObject.executeTransactionAsync(realm -> {
-            if (baseResponse.getFacilityList() != null && !baseResponse.getFacilityList().isEmpty()) {
+        Realm parentRealm = Realm.getDefaultInstance();
+        parentRealm.executeTransactionAsync(realm -> {
+            if (baseResponse.getFacilityList() != null && !baseResponse.getFacilityList().isEmpty() &&
+                    baseResponse.getExclusionList() != null && !baseResponse.getExclusionList().isEmpty()) {
+                // clean the db to store new data
                 realm.delete(Facility.class);
                 realm.delete(Option.class);
-                for (Facility facility : baseResponse.getFacilityList()) {
-                    if (facility != null && facility.getOptions() != null && !facility.getOptions().isEmpty()) {
-                        Facility newFacility = realm.createObject(Facility.class, facility.getFacilityId());
-//                        newFacility.setFacilityId(facility.getFacilityId());
-                        newFacility.setName(facility.getName());
-                        RealmList<Option> optionRealmList = new RealmList<>();
-                        for (Option option : facility.getOptions()) {
-                            if (option != null) {
-                                Option newOption = realm.createObject(Option.class, option.getId());
-                                newOption.setIcon(option.getIcon());
-                                newOption.setName(option.getName());
-//                                newOption.setId(option.getId());
-                                optionRealmList.add(newOption);
-                            }
-                        }
-                        newFacility.setOptions(optionRealmList);
-                    }
-                }
-            }
-
-            if (baseResponse.getExclusionList() != null && !baseResponse.getExclusionList().isEmpty()) {
                 realm.delete(ExclusionList.class);
                 realm.delete(Exclusion.class);
+                // store facilities data with options in Realm
+                realm.copyToRealm(baseResponse.getFacilityList());
+                // store exclusion list data in Realm
                 for (List<Exclusion> exclusionList : baseResponse.getExclusionList()) {
-                    if (exclusionList != null && !exclusionList.isEmpty()) {
-                        ExclusionList newExclusionList = realm.createObject(ExclusionList.class);
-                        RealmList<Exclusion> exclusionRealmList = new RealmList<>();
-                        for (Exclusion exclusion : exclusionList) {
-                            if (exclusion != null) {
-                                Exclusion newExclusion = realm.createObject(Exclusion.class);
-                                newExclusion.setFacilityId(exclusion.getFacilityId());
-                                newExclusion.setOptionsId(exclusion.getOptionsId());
-                                exclusionRealmList.add(newExclusion);
-                            }
-                        }
-                        newExclusionList.setExclusionRealmList(exclusionRealmList);
-                    }
+                    ExclusionList exclusionListList = new ExclusionList();
+                    RealmList<Exclusion> newExclusionList = new RealmList<>();
+                    newExclusionList.addAll(exclusionList);
+                    exclusionListList.setExclusionRealmList(newExclusionList);
+                    realm.copyToRealm(exclusionListList);
                 }
             }
         });
-
-        realmObject.close();
+        // close the Realm instance
+        parentRealm.close();
     }
 }
