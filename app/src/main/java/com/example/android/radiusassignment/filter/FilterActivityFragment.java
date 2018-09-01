@@ -37,8 +37,8 @@ public class FilterActivityFragment extends Fragment implements FilterContract.V
 
     private Snackbar mSnackbar;
 
-    @BindView(R.id.progress_dialog)
-    ProgressBar mProgressDialog;
+    @BindView(R.id.progress_bar)
+    ProgressBar mProgressBar;
 
     @BindView(R.id.facilities_recycler_view)
     RecyclerView mFacilitiesRecyclerView;
@@ -100,10 +100,10 @@ public class FilterActivityFragment extends Fragment implements FilterContract.V
     public void setLoadingIndicator(final boolean active) {
         if (active) {
             // show Loading UI
-            setupCrossfade();
+            showProgressBar();
         } else {
             // hide Loading UI
-            performCrossfade();
+            hideProgressBar();
         }
     }
 
@@ -145,16 +145,17 @@ public class FilterActivityFragment extends Fragment implements FilterContract.V
 
     @Override
     public void showEmptyView() {
-        // TODO: create an empty view in layout
+        // show the empty view and hide the recycler view
         mEmptyView.setVisibility(View.VISIBLE);
         mFacilitiesRecyclerView.setVisibility(View.GONE);
     }
 
     @Override
     public void showFacilities() {
-        // TODO: show the data in Fields
+        // hide the empty view and show the recycler view
         mEmptyView.setVisibility(View.GONE);
         mFacilitiesRecyclerView.setVisibility(View.VISIBLE);
+        // get base response from presenter
         BaseResponse baseResponse = mPresenter.getBaseResponse();
         checkNotNull(baseResponse);
         if (mFacilityRecyclerViewAdapter != null) {
@@ -169,6 +170,9 @@ public class FilterActivityFragment extends Fragment implements FilterContract.V
         mPresenter.itemClicked(isSelected, facilityId, optionId);
     }
 
+    /**
+     * Setup recycler view for content
+     */
     private void setupRecyclerView() {
         mFacilitiesRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity(),
                 LinearLayoutManager.VERTICAL, false));
@@ -185,18 +189,18 @@ public class FilterActivityFragment extends Fragment implements FilterContract.V
                 android.R.integer.config_shortAnimTime);
     }
 
-    private void setupCrossfade() {
+    private void showProgressBar() {
         // Initially hide the content view.
         mEmptyView.setVisibility(View.GONE);
         mFacilitiesRecyclerView.setVisibility(View.GONE);
-        mProgressDialog.setVisibility(View.VISIBLE);
+        mProgressBar.setVisibility(View.VISIBLE);
         // reset opacity
         mEmptyView.setAlpha(1f);
         mFacilitiesRecyclerView.setAlpha(1f);
-        mProgressDialog.setAlpha(1f);
+        mProgressBar.setAlpha(1f);
     }
 
-    private void performCrossfade() {
+    private void hideProgressBar() {
         // Set the content view to 0% opacity but visible, so that it is visible
         // (but fully transparent) during the animation.
         mEmptyView.setAlpha(0f);
@@ -218,13 +222,13 @@ public class FilterActivityFragment extends Fragment implements FilterContract.V
         // Animate the loading view to 0% opacity. After the animation ends,
         // set its visibility to GONE as an optimization step (it won't
         // participate in layout passes, etc.)
-        mProgressDialog.animate()
+        mProgressBar.animate()
                 .alpha(0f)
                 .setDuration(mShortAnimationDuration)
                 .setListener(new AnimatorListenerAdapter() {
                     @Override
                     public void onAnimationEnd(Animator animation) {
-                        mProgressDialog.setVisibility(View.GONE);
+                        mProgressBar.setVisibility(View.GONE);
                     }
                 });
     }

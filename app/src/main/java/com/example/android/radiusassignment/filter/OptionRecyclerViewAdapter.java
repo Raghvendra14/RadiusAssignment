@@ -65,7 +65,7 @@ public class OptionRecyclerViewAdapter extends RecyclerView.Adapter<OptionRecycl
                     resetTextViewDrawableColor(viewHolder.mChip);
                 }
             } else {
-                // remove any icon, if exists
+                // remove any drawables, if exists, to avoid invalid data
                 viewHolder.mChip.setCompoundDrawablesWithIntrinsicBounds(0, 0, 0, 0);
                 viewHolder.mChip.setCompoundDrawablePadding(0);
             }
@@ -92,21 +92,6 @@ public class OptionRecyclerViewAdapter extends RecyclerView.Adapter<OptionRecycl
     @Override
     public int getItemCount() {
         return (mOptionList != null) ? mOptionList.size() : 0;
-    }
-
-    /**
-     * Method to update the list
-     *
-     * @param updatedList List that needs to be added.
-     */
-    public void updateList(List<Option> updatedList) {
-        if (mOptionList == null) {
-            mOptionList = new ArrayList<>();
-        } else {
-            mOptionList.clear();
-        }
-        mOptionList.addAll(updatedList);
-        notifyDataSetChanged();
     }
 
     /**

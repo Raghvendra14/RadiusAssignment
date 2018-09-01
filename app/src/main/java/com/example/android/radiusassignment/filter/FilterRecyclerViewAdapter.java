@@ -46,9 +46,8 @@ public class FilterRecyclerViewAdapter extends RecyclerView.Adapter<FilterRecycl
         Facility currentFacility = mFacilityList.get(itemPosition);
         if (currentFacility != null && currentFacility.getName() != null && !TextUtils.isEmpty(currentFacility.getName()) &&
                 currentFacility.getOptions() != null && !currentFacility.getOptions().isEmpty()) {
-            // TODO: bind the item boiiiiiiiiii
             viewHolder.mFacilityName.setText(currentFacility.getName());
-
+            // setup recycler view for chips
             setupOptionsRecyclerView(viewHolder.mOptionRecyclerView, currentFacility);
         } else {
             viewHolder.mFacilityName.setText("");

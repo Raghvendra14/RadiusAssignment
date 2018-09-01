@@ -2,12 +2,10 @@ package com.example.android.radiusassignment;
 
 import android.app.Application;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.support.multidex.MultiDex;
 
 import com.example.android.radiusassignment.data.remote.AppRemoteDataSource;
 import com.example.android.radiusassignment.interfaces.Constants;
-import com.example.android.radiusassignment.utils.AppPreference;
 import com.example.android.radiusassignment.utils.InternetConnectivity;
 
 import io.realm.Realm;
@@ -27,13 +25,6 @@ public class RadiusAssignment extends Application {
                 .build();
         // set default Realm Configuration
         Realm.setDefaultConfiguration(realmConfiguration);
-
-        /* Initialize the Preference class */
-        new AppPreference.Builder().setContext(this)
-                .setMode(ContextWrapper.MODE_PRIVATE)
-                .setPrefsName(getPackageName())
-                .setUseDefaultSharedPreference(true)
-                .build();
 
         // Initialize AppRemoteDataSource for first time
         AppRemoteDataSource.getInstance();

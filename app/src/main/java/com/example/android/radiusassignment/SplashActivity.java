@@ -28,6 +28,7 @@ public class SplashActivity extends AppCompatActivity {
         // schedule the Firebase Job Scheduler
         scheduleJob();
 
+        // start the main activity
         Intent intent = new Intent(this, FilterActivity.class);
         startActivity(intent);
         finish();

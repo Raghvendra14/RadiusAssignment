@@ -52,7 +52,7 @@ public class AppRepository implements AppDataSource {
      */
     @Override
     public Flowable<BaseResponse> getData() {
-        // TODO: get data from local source first, if available. Otherwise, fetch from remote source, store and show it in view
+        // fetch data from local data source
         Flowable<BaseResponse> localDataSource = mAppLocalDataSource.getData();
 
         return localDataSource.flatMap(baseResponse -> {
@@ -60,6 +60,7 @@ public class AppRepository implements AppDataSource {
                     !baseResponse.getFacilityList().isEmpty()) {
                 return Flowable.just(baseResponse);
             } else if (InternetConnectivity.isConnected()) {
+                // fetch data from remote data source
                 return getRemoteDataSource();
             } else {
                 return sendNoInternetException();

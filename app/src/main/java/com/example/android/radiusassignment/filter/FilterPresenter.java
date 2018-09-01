@@ -144,13 +144,13 @@ public class FilterPresenter implements FilterContract.Presenter {
                                 .toFlowable()
                                 .flatMap(Flowable::fromIterable)
                                 // enable the previously excluded chips
-                                .flatMap(option -> updateChipsByExclusionList(mBaseResponse.getExclusionList(), facilityId,
-                                        option.getId(), false));
+                                .flatMap(option -> updateChipsByExclusionList(facilityId, option.getId(),
+                                        false));
                     });
 
             // disable the excluded chips
-            Flowable<Boolean> disableChipFlowable = (!isSelected) ? updateChipsByExclusionList(mBaseResponse.getExclusionList(),
-                    facilityId, optionId, true) : Flowable.just(Boolean.TRUE);
+            Flowable<Boolean> disableChipFlowable = (!isSelected) ? updateChipsByExclusionList(facilityId,
+                    optionId, true) : Flowable.just(Boolean.TRUE);
 
             // Concat the observables and call showFacilities onComplete
             Disposable itemClickFlowable = Flowable.fromIterable(Lists.newArrayList(selectChipFlowable, disableChipFlowable))
@@ -167,15 +167,14 @@ public class FilterPresenter implements FilterContract.Presenter {
      * It is used to update (enable or disable) chips based on previously or currently selected chips and exclusionList in BaseResponse object.
      * Gets the exclusion list for the facility id and option id present in parameters
      *
-     * @param exclusionList list use to update the chips
-     * @param facilityId    Facility id of an item
-     * @param optionId      Option id of an item
-     * @param isDisabling   It is used to decide whether to enable the chips or disable them
+     * @param facilityId  Facility id of an item
+     * @param optionId    Option id of an item
+     * @param isDisabling It is used to decide whether to enable the chips or disable them
      * @return Flowable of type Boolean
      */
-    private Flowable<Boolean> updateChipsByExclusionList(@NonNull List<List<Exclusion>> exclusionList, @NonNull String facilityId,
-                                                         @NonNull String optionId, boolean isDisabling) {
-        Flowable<List<Exclusion>> excludedItemListFlowable = getExclusionList(exclusionList, facilityId, optionId, null, null);
+    private Flowable<Boolean> updateChipsByExclusionList(@NonNull String facilityId, @NonNull String optionId,
+                                                         boolean isDisabling) {
+        Flowable<List<Exclusion>> excludedItemListFlowable = getExclusionList(facilityId, optionId);
         if (!isDisabling) {
             excludedItemListFlowable = excludedItemListFlowable.flatMap(exclusionList1 -> checkForExistingSelectedChips(exclusionList1, facilityId, optionId));
         }
@@ -198,28 +197,70 @@ public class FilterPresenter implements FilterContract.Presenter {
         List<Exclusion> newExclusionList = new ArrayList<>(exclusionList);
         if (mBaseResponse != null) {
             return Flowable.fromIterable(exclusionList)
-                    .flatMap(currentExclusion -> { // reverse lookup for other exclusions
-                        return getExclusionList(mBaseResponse.getExclusionList(), currentExclusion.getFacilityId(),
-                                currentExclusion.getOptionsId(), facilityId, optionId)
-                                .flatMap(facilitiesExclusionList -> { // if other exclusions found
-                                    return Flowable.fromIterable(facilitiesExclusionList)
-                                            .flatMap(facilityExclusion -> { // check for each facility exclusion being selected or not
-                                                return Flowable.fromIterable(mBaseResponse.getFacilityList())
-                                                        .filter(facility -> facility != null && facility.getFacilityId() != null &&
-                                                                facility.getOptions() != null && !facility.getOptions().isEmpty() &&
-                                                                facility.getFacilityId().equals(facilityExclusion.getFacilityId()))
-                                                        .flatMap(facility -> Flowable.fromIterable(facility.getOptions())
-                                                                .filter(option -> option != null && option.getId() != null &&
-                                                                        option.getId().equals(facilityExclusion.getOptionsId()) &&
-                                                                        option.isSelected())
-                                                                .flatMap(option -> { // selected option found
-                                                                    newExclusionList.remove(currentExclusion);
-                                                                    return Flowable.just(newExclusionList);
-                                                                }).defaultIfEmpty(newExclusionList))
-                                                        .defaultIfEmpty(newExclusionList);
-                                            }).defaultIfEmpty(newExclusionList);
-                                }).defaultIfEmpty(newExclusionList);
-                    }).defaultIfEmpty(newExclusionList);
+                    // reverse lookup for other exclusions
+                    .flatMap(currentExclusion -> performReverseLookup(newExclusionList, currentExclusion, facilityId, optionId))
+                    .defaultIfEmpty(newExclusionList);
+        } else {
+            return Flowable.just(newExclusionList);
+        }
+    }
+
+    /**
+     * Perform reverse lookup for an exclusion to find out in exclusion list. Removes the currently
+     * selected facilityId and optionsId. Calls checkForSelectedOptions {@link #checkForSelectedOptions(List, Exclusion, Exclusion)}
+     * to find out whether reverse looked up exclusions are already selected or not.
+     *
+     * @param newExclusionList Exclusion list that needs to be updated
+     * @param currentExclusion Exclusion object to perform reverse lookup
+     * @param avoidFacilityId  Facility Id used to remove exclusion from reverse looked up list
+     * @param avoidOptionId    Option Id used to remove exclusion from reverse looked up list
+     * @return Flowable of updated list of Exclusion
+     */
+    private Flowable<List<Exclusion>> performReverseLookup(@NonNull List<Exclusion> newExclusionList, @NonNull Exclusion currentExclusion,
+                                                           @NonNull String avoidFacilityId, @NonNull String avoidOptionId) {
+        if (mBaseResponse != null) {
+            return getExclusionList(currentExclusion.getFacilityId(), currentExclusion.getOptionsId())
+                    .flatMapIterable(exclusionList -> exclusionList)
+                    .filter(exclusion -> exclusion != null && exclusion.getOptionsId() != null && exclusion.getFacilityId() != null &&
+                            !exclusion.getFacilityId().equals(avoidFacilityId) && !exclusion.getOptionsId().equals(avoidOptionId))
+                    .toList()
+                    .toFlowable()
+                    // if other exclusions found
+                    .flatMap(facilitiesExclusionList -> Flowable.fromIterable(facilitiesExclusionList)
+                            // check for each facility exclusion being selected or not
+                            .flatMap(facilityExclusion -> checkForSelectedOptions(newExclusionList, facilityExclusion, currentExclusion))
+                            .defaultIfEmpty(newExclusionList))
+                    .defaultIfEmpty(newExclusionList);
+        } else {
+            return Flowable.just(newExclusionList);
+        }
+    }
+
+    /**
+     * Checks for selected options in BaseResponse facility list {@link BaseResponse#facilityList}
+     * and remove items from list of exclusion when options are selected
+     *
+     * @param newExclusionList  List of exclusions that needs to be updated
+     * @param facilityExclusion Exclusion object used to compare from list
+     * @param currentExclusion  Exclusion object that might get eliminated if a option is found selected
+     * @return Flowable of updated list of Exclusion
+     */
+    private Flowable<List<Exclusion>> checkForSelectedOptions(@NonNull List<Exclusion> newExclusionList, @NonNull Exclusion facilityExclusion,
+                                                              @NonNull Exclusion currentExclusion) {
+        if (mBaseResponse != null) {
+            return Flowable.fromIterable(mBaseResponse.getFacilityList())
+                    .filter(facility -> facility != null && facility.getFacilityId() != null &&
+                            facility.getOptions() != null && !facility.getOptions().isEmpty() &&
+                            facility.getFacilityId().equals(facilityExclusion.getFacilityId()))
+                    .flatMap(facility -> Flowable.fromIterable(facility.getOptions())
+                            .filter(option -> option != null && option.getId() != null &&
+                                    option.getId().equals(facilityExclusion.getOptionsId()) &&
+                                    option.isSelected())
+                            .flatMap(option -> { // selected option found
+                                newExclusionList.remove(currentExclusion);
+                                return Flowable.just(newExclusionList);
+                            }).defaultIfEmpty(newExclusionList))
+                    .defaultIfEmpty(newExclusionList);
         } else {
             return Flowable.just(newExclusionList);
         }
@@ -229,62 +270,51 @@ public class FilterPresenter implements FilterContract.Presenter {
      * Computes an exclusion list Flowable {@link Flowable} from the list given in parameters based on the facility id,
      * option id. Uses collect operator of Flowable {@link Flowable#collect(Callable, BiConsumer)}
      *
-     * @param exclusionList   List to find out the exclusion list
-     * @param facilityId      Facility id of an item
-     * @param optionId        Option id of an item
-     * @param avoidFacilityId Facility id of an item that should not be in the flowable
-     * @param avoidOptionId   Option id of an item that should not be in the flowable
+     * @param facilityId Facility id of an item
+     * @param optionId   Option id of an item
      * @return Flowable of type List<Exclusion>
      */
-    private Flowable<List<Exclusion>> getExclusionList(@NonNull List<List<Exclusion>> exclusionList,
-                                                       @NonNull String facilityId, @NonNull String optionId,
-                                                       @Nullable String avoidFacilityId, @Nullable String avoidOptionId) {
-        List<Exclusion> totalDisableOptionList = new ArrayList<>();
-
-        Flowable<List<Exclusion>> flowable = Flowable.fromIterable(exclusionList)
-                .flatMap(exclusions -> {
-                    List<Exclusion> disableOptionList = new ArrayList<>();
-                    AtomicBoolean containsCurrentIds = new AtomicBoolean(false);
-                    AtomicInteger exclusionSize = new AtomicInteger(exclusions.size());
-                    return getFilteredExclusionFlowable(exclusions)
-                            .collect(() -> disableOptionList, (list, exclusion) -> {
-                                if (exclusion.getFacilityId().equals(facilityId) &&
-                                        exclusion.getOptionsId().equals(optionId)) {
-                                    containsCurrentIds.set(true);
-                                } else {
-                                    list.add(exclusion);
-                                }
-                            })
-                            .repeat()
-                            .takeUntil(disableOptList -> {
-                                if (disableOptList.size() == exclusionSize.get() ||
-                                        (containsCurrentIds.get() && disableOptList.size() + 1 == exclusionSize.get())) {
-                                    if (!containsCurrentIds.get()) {
-                                        disableOptList.clear();
+    private Flowable<List<Exclusion>> getExclusionList(@NonNull String facilityId, @NonNull String optionId) {
+        if (mBaseResponse != null) {
+            List<Exclusion> totalDisableOptionList = new ArrayList<>();
+            return Flowable.fromIterable(mBaseResponse.getExclusionList())
+                    .flatMap(exclusions -> {
+                        List<Exclusion> disableOptionList = new ArrayList<>();
+                        AtomicBoolean containsCurrentIds = new AtomicBoolean(false);
+                        AtomicInteger exclusionSize = new AtomicInteger(exclusions.size());
+                        return getFilteredExclusionFlowable(exclusions)
+                                .collect(() -> disableOptionList, (list, exclusion) -> {
+                                    if (exclusion.getFacilityId().equals(facilityId) &&
+                                            exclusion.getOptionsId().equals(optionId)) {
+                                        containsCurrentIds.set(true);
+                                    } else {
+                                        list.add(exclusion);
                                     }
-                                    return true;
-                                }
-                                return false;
-                            })
-                            .last(new ArrayList<>())
-                            .toFlowable()
-                            .filter(tempExclusions -> tempExclusions != null && !tempExclusions.isEmpty())
-                            .map(tempExclusions -> {
-                                totalDisableOptionList.addAll(tempExclusions);
-                                return totalDisableOptionList;
-                            });
-                })
-                .last(new ArrayList<>())
-                .toFlowable();
-
-        if (avoidFacilityId != null && avoidOptionId != null) {
-            flowable = flowable.flatMapIterable(exclusionList1 -> exclusionList1)
-                    .filter(exclusion -> exclusion != null && exclusion.getOptionsId() != null && exclusion.getFacilityId() != null &&
-                            !exclusion.getFacilityId().equals(avoidFacilityId) && !exclusion.getOptionsId().equals(avoidFacilityId))
-                    .toList().toFlowable();
+                                })
+                                .repeat()
+                                .takeUntil(disableOptList -> {
+                                    if (disableOptList.size() == exclusionSize.get() ||
+                                            (containsCurrentIds.get() && disableOptList.size() + 1 == exclusionSize.get())) {
+                                        if (!containsCurrentIds.get()) {
+                                            disableOptList.clear();
+                                        }
+                                        return true;
+                                    }
+                                    return false;
+                                })
+                                .last(new ArrayList<>())
+                                .toFlowable()
+                                .filter(tempExclusions -> tempExclusions != null && !tempExclusions.isEmpty())
+                                .map(tempExclusions -> {
+                                    totalDisableOptionList.addAll(tempExclusions);
+                                    return totalDisableOptionList;
+                                });
+                    })
+                    .last(new ArrayList<>())
+                    .toFlowable();
+        } else {
+            return Flowable.just(new ArrayList<Exclusion>());
         }
-
-        return flowable;
     }
 
     /**
@@ -313,7 +343,8 @@ public class FilterPresenter implements FilterContract.Presenter {
                                             }
                                         }
                                         return Flowable.just(Boolean.TRUE);
-                                    })));
+                                    })))
+                    .defaultIfEmpty(Boolean.FALSE);
         }
         return Flowable.just(Boolean.FALSE);
     }

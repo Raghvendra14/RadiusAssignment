@@ -53,6 +53,5 @@ public class AppRemoteDataSource implements AppDataSource {
                          @NonNull BaseResponse baseResponse) {
         // to store data in the backend
         checkNotNull(baseResponse);
-
     }
 }
